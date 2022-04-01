@@ -417,21 +417,29 @@ async function main() {
 	const test2Nft = await Promise.all(test2NftIndex.map(i => contract.methods.tokenOfOwnerByIndex(test2Account.address, i).call()));
 	console.log('test 2 nft: ', test2Nft);
 
-	const fromAccount = test1Nft.length > 0 ? test1Account : test2Account
+	const fromAccount = test1Nft.length > 0 ? test1Account : test2Account;
 	const fromAccountTxCount = await web3.eth.getTransactionCount(fromAccount.address);
-	const fromAccountNft = test1Nft.length > 0 ? test1Nft : test2Nft
-	const toAccount = test1Nft.length > 0 ? test2Account : test1Account
+	const fromAccountNft = test1Nft.length > 0 ? test1Nft : test2Nft;
+	const toAccount = test1Nft.length > 0 ? test2Account : test1Account;
 
     const gasPriceGwei = await web3.eth.getGasPrice();
-    const gasLimit = 1000000;
-    const rawTransaction = {
+    const gasLimit = await web3.eth.estimateGas({
     	'nonce': '0x' + fromAccountTxCount.toString(16),
         'from': fromAccount.address,
         'gasPrice': web3.utils.toHex(gasPriceGwei),
-        'gasLimit': web3.utils.toHex(gasLimit),
         'to': contractAddress,
         'value': "0x00",
         'data': contract.methods.safeTransferFrom(fromAccount.address, toAccount.address, fromAccountNft[0]).encodeABI(),
+    });
+
+    let rawTransaction = {
+		'nonce': '0x' + fromAccountTxCount.toString(16),
+		'from': fromAccount.address,
+		'gasPrice': web3.utils.toHex(gasPriceGwei),
+		'gasLimit': gasLimit,
+		'to': contractAddress,
+		'value': "0x00",
+		'data': contract.methods.safeTransferFrom(fromAccount.address, toAccount.address, fromAccountNft[0]).encodeABI(),
     };
     console.log('Raw of Transaction: \n', JSON.stringify(rawTransaction, null, '\t'));
 
